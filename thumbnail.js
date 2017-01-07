@@ -9,14 +9,14 @@ var mc = new Minio.Client({
     secretKey: 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
 });
 
-let poller = mc.listenBucketNotification('harsha', 'img-', '.jpg', ['s3:ObjectCreated:*'])
-
+var poller = mc.listenBucketNotification('harsha', 'img-', '.jpg',
+                                         ['s3:ObjectCreated:*']);
 const imageType = 'image/jpg';
 
 poller.on('notification', record => {
-    var bname = record.s3.bucket.name
-    var oname = record.s3.object.key
-    var size = record.s3.object.size
+    var size = record.s3.object.size;
+    var bname = record.s3.bucket.name;
+    var oname = record.s3.object.key;
     mc.getObject(bname, oname,
                  function(err, dataStream) {
                      if (err) {
@@ -26,13 +26,12 @@ poller.on('notification', record => {
                                   uuidV4()+"-thumbnail.jpg",
                                   dataStream,
                                   size,
-                                  imageType,
-                                  function(err, etag) {
+                                  imageType, function(err, etag) {
                                       if (err) {
                                           return console.log(err);
                                       }
                                       console.log(etag);
                                   });
                  });
-    poller.stop()
+    poller.stop();
 })

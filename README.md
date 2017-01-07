@@ -1,6 +1,6 @@
 # minio-lambda
 
-Lambda with Minio example using [minio-js](./listen.js)
+Lambda function example on Minio Server using minio-js.
 
 ## Yarn package
 
