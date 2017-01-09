@@ -1,6 +1,6 @@
 # minio-lambda
 
-Lambda function example on Minio Server using minio-js.
+Lambda function example with Minio Bucket Event Notification.
 
 ## Yarn package
 
