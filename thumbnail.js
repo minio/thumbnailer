@@ -16,6 +16,7 @@
  */
 
 var Minio = require('minio');
+var sharp = require('sharp');
 var uuidV4 = require('uuid/v4');
 var config = require('config');
 
@@ -24,8 +25,42 @@ var mcConfig = config.get('config');
 var mc = new Minio.Client(mcConfig)
 var poller = mc.listenBucketNotification(mcConfig.bucket, mcConfig.prefix,
                                          mcConfig.suffix, mcConfig.events);
+console.log("Listening for events on", "\""+mcConfig.bucket+"\"");
+
+// Allocate resize transformer from sharp().
+// resize to 40 pixels wide and 40 pixes in height,
+var transformer = sharp().resize(40, 40)
+
+// Sharp defaults to jpeg, to use other formats use
+// sharp() documentation at http://sharp.dimens.io/en/stable/
 
 const imageType = 'image/jpg';
+
+// Wait on notification from the poller.
+poller.on('notification', record => {
+    var bname = record.s3.bucket.name;
+    var oname = record.s3.object.key;
+    mc.getObject(bname, oname,
+                 function(err, dataStream) {
+                     if (err) {
+                         return console.log(err);
+                     }
+                     var thumbnailName = uuidV4()+"-thumbnail.jpg";
+                     console.log("Uploading new thumbail to",
+                                 "\""+mcConfig.destBucket+"\"");
+                     mc.putObject(mcConfig.destBucket,
+                                  thumbnailName,
+                                  dataStream.pipe(transformer),
+                                  imageType, function(err, etag) {
+                                      if (err) {
+                                          return console.log(err);
+                                      }
+                                      console.log("Successfully uploaded",
+                                                  "\""+thumbnailName+"\"",
+                                                  "\""+etag+"\"");
+                                  });
+                 });
+})
 
 if (process.platform === "win32") {
     var rl = require("readline").createInterface({
@@ -43,25 +78,3 @@ process.on("SIGINT", function () {
     poller.stop();
     process.exit();
 });
-
-poller.on('notification', record => {
-    var size = record.s3.object.size;
-    var bname = record.s3.bucket.name;
-    var oname = record.s3.object.key;
-    mc.getObject(bname, oname,
-                 function(err, dataStream) {
-                     if (err) {
-                         return console.log(err);
-                     }
-                     mc.putObject(mcConfig.destBucket,
-                                  uuidV4()+"-thumbnail.jpg",
-                                  dataStream,
-                                  size,
-                                  imageType, function(err, etag) {
-                                      if (err) {
-                                          return console.log(err);
-                                      }
-                                      console.log(etag);
-                                  });
-                 });
-})

@@ -8,10 +8,9 @@
     "bucket": "images",
     "destBucket": "images-processed",
     "prefix": "",
-    "suffix": ".png",
+    "suffix": ".jpg",
     "events": [
-      "s3:ObjectCreated:*",
-      "s3:ObjectRemoved:*"
+      "s3:ObjectCreated:*"
     ]
   }
 }
