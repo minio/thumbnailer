@@ -1,5 +1,5 @@
 /*
- * Lambda function example with Minio Bucket Event Notification,
+ * Lambda function example with Minio Bucket Event Notification
  * (C) 2017 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,18 +17,32 @@
 
 var Minio = require('minio');
 var uuidV4 = require('uuid/v4');
+var config = require('config');
 
-var mc = new Minio.Client({
-    endPoint: 'play.minio.io',
-    port: 9000,
-    secure: true,
-    accessKey: 'Q3AM3UQ867SPQQA43P2F',
-    secretKey: 'zuf+tfteSlswRu7BJ86wekitnifILbZam1KYY3TG'
-});
+var mcConfig = config.get('config');
 
-var poller = mc.listenBucketNotification('harsha', 'img-', '.jpg',
-                                         ['s3:ObjectCreated:*']);
+var mc = new Minio.Client(mcConfig)
+var poller = mc.listenBucketNotification(mcConfig.bucket, mcConfig.prefix,
+                                         mcConfig.suffix, mcConfig.events);
+
 const imageType = 'image/jpg';
+
+if (process.platform === "win32") {
+    var rl = require("readline").createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    rl.on("SIGINT", function () {
+        process.emit("SIGINT");
+    });
+}
+
+process.on("SIGINT", function () {
+    // graceful shutdown
+    poller.stop();
+    process.exit();
+});
 
 poller.on('notification', record => {
     var size = record.s3.object.size;
@@ -39,7 +53,7 @@ poller.on('notification', record => {
                      if (err) {
                          return console.log(err);
                      }
-                     mc.putObject(bname,
+                     mc.putObject(mcConfig.destBucket,
                                   uuidV4()+"-thumbnail.jpg",
                                   dataStream,
                                   size,
@@ -50,5 +64,4 @@ poller.on('notification', record => {
                                       console.log(etag);
                                   });
                  });
-    poller.stop();
 })
