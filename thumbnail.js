@@ -1,5 +1,5 @@
 /*
- * Lambda function example with Minio Bucket Event Notification
+ * Thumbnail generator using Bucket Event Notification
  * (C) 2017 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +45,7 @@ poller.on('notification', record => {
                      if (err) {
                          return console.log(err);
                      }
-                     var thumbnailName = uuidV4()+"-thumbnail.jpg";
+                     var thumbnailName = oname.split('.')[0]+"-thumbnail.jpg";
                      console.log("Uploading new thumbail to",
                                  "\""+mcConfig.destBucket+"\"");
                      mc.putObject(mcConfig.destBucket,
@@ -57,7 +57,7 @@ poller.on('notification', record => {
                                       }
                                       console.log("Successfully uploaded",
                                                   "\""+thumbnailName+"\"",
-                                                  "\""+etag+"\"");
+                                                  "with md5sum \""+etag+"\"");
                                   });
                  });
 })

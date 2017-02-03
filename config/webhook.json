@@ -1,0 +1,16 @@
+{
+  "config": {
+    "endPoint": "<endpoint>",
+    "port": 9000,
+    "secure": false,
+    "accessKey": "<access-id>",
+    "secretKey": "<secret-id>",
+    "bucket": "<bucket>",
+    "destBucket": "<bucket-processed>",
+    "prefix": "<prefix>",
+    "suffix": "<suffix>",
+    "events": [
+      "s3:ObjectCreated:*"
+    ]
+  }
+}

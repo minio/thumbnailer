@@ -6,19 +6,21 @@ A thumbnail generator example using Minio's [listenBucketNotification API](http:
 
 Dependencies are managed by [yarn](https://yarnpkg.com/en/docs/install)
 
-Just run `yarn` it would install all the necessary dependencies.
+Just run `yarn` to install all the necessary dependencies.
+
 ```sh
 yarn
 ```
 
-If you fancy `npm install` - that still works too.
+No `yarn`? use `npm install`.
+
 ```sh
 npm install
 ```
 
 ## Configure
 
-Please edit `config/default.json` with your local parameters, currently the example points to https://play.minio.io:9000
+Please edit `config/development.json` with your local parameters, currently the example points to https://play.minio.io:9000
 
 <blockquote>This example works only with Minio server using an extended API</blockquote>
 
@@ -44,12 +46,12 @@ You will see thumbnail being generated after uploading the image using `mc`.
 node thumbnail.js
 Listening for events on "images"
 Uploading new thumbail to "images-processed"
-Successfully uploaded "174aac49-7a88-4cfb-943e-c364aee1ffbd-thumbnail.jpg" "ca78ee1cc48358b4dbd883a589523e54"
+Successfully generated "graph-thumbnail.jpg" with md5sum "ca78ee1cc48358b4dbd883a589523e54"
 ```
 
 To validate if the thumbnail was created at destination bucket use `mc`.
 
 ```sh
 mc ls play/images-processed
-[2017-01-22 23:44:51 PST]   629B 174aac49-7a88-4cfb-943e-c364aee1ffbd-thumbnail.jpg
+[2017-01-22 23:44:51 PST]   629B graph-thumbnail.jpg
 ```

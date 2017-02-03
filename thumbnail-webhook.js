@@ -21,11 +21,25 @@ var bodyParser = require('body-parser');
 
 var Minio = require('minio');
 var sharp = require('sharp');
-var uuidV4 = require('uuid/v4');
 var config = require('config');
 
 var mcConfig = config.get('config');
+if (mcConfig.endPoint === '<endpoint>') {
+    console.log('Please configure your endpoint in \"config/webhook.json\".');
+    process.exit(1);
+}
+
+// Allocate a new minio-js client.
 var mc = new Minio.Client(mcConfig)
+
+// Generates a webhook config json.
+var webhookConfig = function() {
+    var config = {"webhook": {}}
+    config.webhook["1"] = {}
+    config.webhook["1"].enable = true
+    config.webhook["1"].endpoint = "http://localhost:3000"
+    return JSON.stringify(config, null, '\t')
+}
 
 // Allocate resize transformer from sharp().
 // resize to 40 pixels wide and 40 pixes in height,
@@ -45,7 +59,7 @@ app.post('/', function (req, res) {
                      if (err) {
                          return console.log(err);
                      }
-                     var thumbnailName = uuidV4()+"-thumbnail.jpg";
+                     var thumbnailName = oname.split('.')[0]+"-thumbnail.jpg";
                      console.log("Uploading new thumbail to",
                                  "\""+mcConfig.destBucket+"\"");
                      mc.putObject(mcConfig.destBucket,
@@ -63,8 +77,27 @@ app.post('/', function (req, res) {
     res.send("");
 })
 
+
 var server = app.listen(3000, function () {
-    console.log('Webhook listening on port 3000!')
+    console.log('Webhook listening on all interfaces at port 3000!')
+    console.log('Please update minio server config `~/.minio/config.json` to enable webhook notification target.')
+    console.log(webhookConfig())
+    console.log('Once you have edited `~/.minio/config.json` please restart your minio server.')
+    console.log('')
+    console.log('Now we proceed to use "mc" to enable receiving events over webhook.')
+    console.log('')
+    if ((mcConfig.destBucket) && (mcConfig.bucket)) {
+        console.log('   $ mc mb myminio/'+mcConfig.bucket)
+        console.log('   $ mc mb myminio/'+mcConfig.destBucket)
+    }
+    var msg = '   $ mc events add myminio/images arn:minio:sqs:us-east-1:1:webhook --events put'
+    if (mcConfig.prefix) {
+        msg += ' --prefix ' + mcConfig.prefix
+    }
+    if (mcConfig.suffix) {
+        msg += ' --suffix ' + mcConfig.suffix
+    }
+    console.log(msg)
 })
 
 if (process.platform === "win32") {
