@@ -90,7 +90,7 @@ var server = app.listen(3000, function () {
         console.log('   $ mc mb myminio/'+mcConfig.bucket)
         console.log('   $ mc mb myminio/'+mcConfig.destBucket)
     }
-    var msg = '   $ mc events add myminio/images arn:minio:sqs:us-east-1:1:webhook --events put'
+    var msg = '   $ mc event add myminio/images arn:minio:sqs:us-east-1:1:webhook --event put'
     if (mcConfig.prefix) {
         msg += ' --prefix ' + mcConfig.prefix
     }
