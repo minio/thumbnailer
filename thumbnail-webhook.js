@@ -1,6 +1,6 @@
 /*
  * Function as Service example with Minio Bucket Webhook Notification
- * (C) 2017 Minio, Inc.
+ * (C) 2017-2019 Minio, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,9 +80,9 @@ app.post('/', function (req, res) {
 
 var server = app.listen(3000, function () {
     console.log('Webhook listening on all interfaces at port 3000!')
-    console.log('Please update minio server config `~/.minio/config.json` to enable webhook notification target.')
+    console.log('Please update minio server config as explained in `https://docs.min.io/docs/minio-server-configuration-guide.html` to enable webhook notification target.')
     console.log(webhookConfig())
-    console.log('Once you have edited `~/.minio/config.json` please restart your minio server.')
+    console.log('Once server config is updated, please restart your minio server.')
     console.log('')
     console.log('Now we proceed to use "mc" to enable receiving events over webhook.')
     console.log('')
