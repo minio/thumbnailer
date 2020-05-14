@@ -46,7 +46,7 @@ var webhookConfig = function() {
 var transformer = sharp().resize(40, 40)
 
 // Sharp defaults to jpeg, to use other formats use
-// sharp() documentation at http://sharp.dimens.io/en/stable/
+// sharp() documentation at https://sharp.pixelplumbing.com/
 const imageType = 'image/jpg';
 
 app.use(bodyParser.json()); // for parsing application/json
