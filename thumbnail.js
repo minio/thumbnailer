@@ -22,44 +22,62 @@ var config = require('config');
 
 var mcConfig = config.get('config');
 
-var mc = new Minio.Client(mcConfig)
+var mc = new Minio.Client(mcConfig);
+
 var poller = mc.listenBucketNotification(mcConfig.bucket, mcConfig.prefix,
-                                         mcConfig.suffix, mcConfig.events);
-console.log("Listening for events on", "\""+mcConfig.bucket+"\"");
+    mcConfig.suffix, mcConfig.events);
+
+console.log("Listening for events on", "\"" + mcConfig.bucket + "\"");
+console.log("mcConfig.prefix: ", "\"" + mcConfig.prefix + "\"");
+console.log("mcConfig.suffix: ", "\"" + mcConfig.suffix + "\"");
+console.log("mcConfig.events: ", "\"" + mcConfig.events + "\"");
 
 // Allocate resize transformer from sharp().
-// resize to 40 pixels wide and 40 pixes in height,
-var transformer = sharp().resize(40, 40)
-
-// Sharp defaults to jpeg, to use other formats use
-// sharp() documentation at https://sharp.pixelplumbing.com/
+// resize to THUMB_MAX_WIDTH pixels wide and THUMB_MAX_HEIGHT pixes in height,
+const THUMB_MAX_WIDTH = 200;
+const THUMB_MAX_HEIGHT = 200;
 
 const imageType = 'image/jpg';
 
 // Wait on notification from the poller.
-poller.on('notification', record => {
+poller.on('notification', function (record) {
+
+    console.log('New event: %s/%s (size: %d) occurred (%s)', record.s3.bucket.name,
+        record.s3.object.key, record.s3.object.size, record.eventTime)
+
     var bname = record.s3.bucket.name;
     var oname = decodeURIComponent(record.s3.object.key);
+
     mc.getObject(bname, oname,
-                 function(err, dataStream) {
-                     if (err) {
-                         return console.log(err);
-                     }
-                     var thumbnailName = oname.split('.')[0]+"-thumbnail.jpg";
-                     console.log("Uploading new thumbail to",
-                                 "\""+mcConfig.destBucket+"\"");
-                     mc.putObject(mcConfig.destBucket,
-                                  thumbnailName,
-                                  dataStream.pipe(transformer),
-                                  imageType, function(err, etag) {
-                                      if (err) {
-                                          return console.log(err);
-                                      }
-                                      console.log("Successfully uploaded",
-                                                  "\""+thumbnailName+"\"",
-                                                  "with md5sum \""+etag+"\"");
-                                  });
-                 });
+        function (err, dataStream) {
+            if (err) {
+                return console.log("Error on getObject: " + err);
+            }
+
+            var thumbnailName = oname.split('.')[0] + "-thumbnail.jpg";
+
+            console.log("Uploading new thumbail to",
+                "\"" + mcConfig.destBucket + "\"");
+
+            mc.putObject(
+                mcConfig.destBucket,
+                thumbnailName,
+                // Sharp defaults to jpeg, to use other formats use
+                // sharp() documentation at https://sharp.pixelplumbing.com/
+                dataStream.pipe(sharp().resize(THUMB_MAX_WIDTH, THUMB_MAX_HEIGHT)),
+                imageType,
+                function (err, etag) {
+
+                    if (err) {
+                        return console.log("Error on putObject: " + err);
+                    }
+
+                    console.log("Successfully uploaded",
+                        "\"" + thumbnailName + "\"",
+                        "with md5sum \"" + etag + "\"");
+                });
+
+        })
 })
 
 if (process.platform === "win32") {
